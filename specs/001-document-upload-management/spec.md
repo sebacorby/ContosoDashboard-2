@@ -5,6 +5,16 @@
 **Status**: Draft  
 **Input**: User description: "StakeholderDocs/document-upload-and-management-feature.md"
 
+## Clarifications
+
+### Session 2026-09-15
+
+- Q: What happens to project documents when their uploader is removed from the project? → A: The documents remain with the project, and the removed user immediately loses project-derived access.
+- Q: What happens to documents when their associated project is deleted? → A: The project deletion permanently removes its associated documents after confirmation and records the deletion activity.
+- Q: What happens to recipients when the owner deletes a shared document? → A: All shares are revoked immediately, recipients lose access, and the deletion remains in the audit trail.
+- Q: How are filenames with spaces or special characters handled? → A: The original filename is preserved for display and download, while filename content cannot control storage paths; unsafe path traversal input is rejected.
+- Q: What happens when storage fills up or an upload is interrupted? → A: The upload fails atomically, partial content is removed, no completed document record remains, and the user receives a clear retryable error.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Upload and organize work documents (Priority: P1)
@@ -61,7 +71,12 @@ A document owner or project leader needs to share documents with the right peopl
 - How does the system behave when an upload is interrupted or a file cannot be written to storage?
 - What happens if a user tries to access a document without permission or attempts to use a duplicate or malformed file name?
 - How does the system handle documents with no project association, no tags, or no description?
-- What should happen when a document is shared with a user who has no access to the associated project or when a project member is removed from a team?
+- Project documents cannot be shared to bypass project access; recipients without project access must first gain authorized project access.
+- When a project member is removed, project-derived document access ends immediately while existing project documents remain available to current authorized members.
+- If an associated project is deleted, its documents are permanently removed after confirmation and the deletion is logged.
+- If a shared document is deleted by its owner, all shares are revoked immediately and recipients lose access.
+- Filenames with spaces and common punctuation remain usable, but path-traversal input must not influence storage location.
+- If storage becomes unavailable, fills up, or an upload is interrupted, partial content is removed and no completed document record is retained.
 
 ## Requirements *(mandatory)*
 
@@ -88,6 +103,12 @@ A document owner or project leader needs to share documents with the right peopl
 - **FR-019**: The system MUST provide administrators with reporting views for most uploaded document types, most active uploaders, and document access patterns.
 - **FR-020**: The system MUST support an offline training configuration using local file storage and must abstract file storage behind a service interface to allow future migration without changing business logic.
 - **FR-021**: The system MUST maintain document identifiers as integers and store category values as text labels to remain consistent with the current application data model and simplified training needs.
+- **FR-022**: Removing a user from a project MUST immediately revoke project-derived document access without deleting documents that remain associated with that project.
+- **FR-023**: Deleting a project MUST permanently remove its associated documents after the project deletion is confirmed and MUST record the document deletion activity.
+- **FR-024**: Deleting a shared document MUST revoke all active shares immediately and prevent former recipients from accessing it.
+- **FR-025**: The system MUST preserve the original filename for display and download while preventing filename content from changing storage location or enabling path traversal.
+- **FR-026**: Interrupted or failed uploads MUST leave no completed document record or partial stored file and MUST present a clear retryable error.
+- **FR-027**: Sharing a project-associated document MUST NOT grant access to a recipient who otherwise lacks authorized access to that project.
 
 ### Key Entities *(include if feature involves data)*
 
