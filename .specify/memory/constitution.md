@@ -1,50 +1,39 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# ContosoDashboard Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Security and Training Boundaries
+This project MUST remain a training-only system. No production deployment, external identity provider, or confidential data handling is permitted without a separate governance review and explicit production hardening. Mock authentication, local-only persistence, and sample data are permitted only for educational exercises. This requirement protects the repository from unsupported security claims and keeps the training scenario aligned with its intended purpose.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Access Control and User Isolation
+Every page, service method, and data request MUST enforce authorization before exposing project, task, or notification data. The application MUST treat the current authenticated user as the source of truth for visibility, mutation rights, and role-based access decisions. This rule prevents IDOR failures and ensures each user sees only the data they are entitled to access.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Data Integrity and Model Clarity
+All domain models and service contracts MUST reflect the real business rules of the dashboard: users, projects, tasks, ownership, membership, status, and notifications. The code MUST reject invalid relationships, keep foreign keys consistent, and maintain clear ownership boundaries. This keeps the business logic understandable and prevents hidden coupling between data and UI behavior.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Test-First and Regression Safety
+New behavior MUST be specified and validated before implementation. For any defect, security change, or workflow change, a failing test or explicit reproduction step MUST exist before code changes. Regression fixes MUST be proven with a repeatable check before merge. This ensures the training app remains stable while teaching disciplined Spec-Driven Development.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Maintainability and Offline-First Architecture
+The system MUST favor clear separation of concerns, small services, and dependency injection over hidden assumptions. Local-first development and infrastructure abstractions are required so the application can run offline without cloud dependencies while remaining migration-ready. This preserves a teachable architecture and reduces setup friction for training scenarios.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Additional Constraints
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+The project MUST remain aligned with the README training charter:
+- Use mock authentication only unless a project-specific exception is approved.
+- Prefer local development defaults such as LocalDB and local files over cloud dependencies.
+- Keep security demonstrations explicit and educational, not production-grade assumptions.
+- Preserve role-based access and service-level checks as default enforcement.
+- Record any material departure from these constraints in the relevant spec or plan before implementation.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+All changes MUST follow the repository's Spec Kit workflow: define the problem in a spec, create a plan when the change is non-trivial, and verify behavior before completion. Pull requests MUST confirm that authorization, data isolation, and regression checks remain intact. Design changes that alter security posture or architecture MUST be reviewed for training suitability before merge.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This Constitution supersedes informal practices and local exceptions for project work in this repository. Amendments require a documented rationale, a version bump, and review of impacted principles and workflows before adoption. All changes to governance, authorization, or architecture must be traceable to a spec or amendment record.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+The project MUST review compliance on a regular basis, especially after significant feature additions, security changes, or framework upgrades. Any review finding that conflicts with the principles above requires a corrective action plan and, when necessary, a governance amendment.
+
+**Version**: 1.0.0 | **Ratified**: 2026-09-15 | **Last Amended**: 2026-09-15
