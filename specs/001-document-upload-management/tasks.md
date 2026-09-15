@@ -11,10 +11,10 @@
 
 **Purpose**: Prepare repeatable test/build infrastructure and runtime-safe local storage configuration.
 
-- [ ] T001 Create `ContosoDashboard.Tests/ContosoDashboard.Tests.csproj` as an xUnit .NET 10 test project referencing `ContosoDashboard/ContosoDashboard.csproj`
-- [ ] T002 Create `ContosoDashboard.sln` and add `ContosoDashboard/ContosoDashboard.csproj` plus `ContosoDashboard.Tests/ContosoDashboard.Tests.csproj`
-- [ ] T003 [P] Ignore generated SQLite databases and runtime upload content in `.gitignore` for `ContosoDashboard/*.db` and `ContosoDashboard/AppData/uploads/`
-- [ ] T004 [P] Add local document-storage root and 25 MB upload-limit configuration in `ContosoDashboard/appsettings.json` and `ContosoDashboard/appsettings.Development.json`
+- [X] T001 Create `ContosoDashboard.Tests/ContosoDashboard.Tests.csproj` as an xUnit .NET 10 test project referencing `ContosoDashboard/ContosoDashboard.csproj`
+- [X] T002 Create `ContosoDashboard.sln` and add `ContosoDashboard/ContosoDashboard.csproj` plus `ContosoDashboard.Tests/ContosoDashboard.Tests.csproj`
+- [X] T003 [P] Ignore generated SQLite databases and runtime upload content in `.gitignore` for `ContosoDashboard/*.db` and `ContosoDashboard/AppData/uploads/`
+- [X] T004 [P] Add local document-storage root and 25 MB upload-limit configuration in `ContosoDashboard/appsettings.json` and `ContosoDashboard/appsettings.Development.json`
 
 **Checkpoint**: `dotnet restore ContosoDashboard.sln` and an empty `dotnet test ContosoDashboard.sln` are runnable.
 
@@ -25,20 +25,20 @@
 **Purpose**: Establish shared data, authorization, storage, scanning, and service infrastructure before user-story implementation.
 
 **CRITICAL**: No user-story work begins until this phase is complete.
-- [ ] T005 [P] Create `Document` with integer `DocumentId`, required title/category/original filename/storage path/file size/file type/uploader/upload date and optional project/description fields in `ContosoDashboard/Models/Document.cs`
-- [ ] T006 [P] Create `DocumentTag` with required trimmed tag value and document relationship in `ContosoDashboard/Models/DocumentTag.cs`
-- [ ] T007 [P] Create `DocumentShare` with exactly one user-or-department target and sharing metadata in `ContosoDashboard/Models/DocumentShare.cs`
-- [ ] T008 [P] Create `DocumentTask` with unique document/task relationship in `ContosoDashboard/Models/DocumentTask.cs`
-- [ ] T009 [P] Create immutable `DocumentActivity` audit model with nullable logical document reference and title snapshot in `ContosoDashboard/Models/DocumentActivity.cs`
-- [ ] T010 Configure document DbSets, relationships, delete behaviors, `StoragePath` uniqueness, MIME length 255, and document indexes in `ContosoDashboard/Data/ApplicationDbContext.cs`
-- [ ] T011 [P] Write failing safe-path, upload/delete, and partial-cleanup tests for local storage in `ContosoDashboard.Tests/Services/LocalFileStorageServiceTests.cs`
-- [ ] T012 [P] Write failing safe/unsafe scan-result tests in `ContosoDashboard.Tests/Services/TrainingFileScanServiceTests.cs`
-- [ ] T013 [P] Define `IFileStorageService` and storage-path contract in `ContosoDashboard/Services/IFileStorageService.cs`
-- [ ] T014 [P] Define `IFileScanService` and `FileScanResult` contract in `ContosoDashboard/Services/IFileScanService.cs`
-- [ ] T015 Implement deterministic training-grade scanning behavior in `ContosoDashboard/Services/TrainingFileScanService.cs` until T012 passes
-- [ ] T016 Implement generated `{userId}/{projectId-or-personal}/{guid}.{ext}` paths, safe writes/download/delete, and cleanup in `ContosoDashboard/Services/LocalFileStorageService.cs` until T011 passes
-- [ ] T017 Define authorization-aware document operations in `ContosoDashboard/Services/IDocumentService.cs`
-- [ ] T018 Add the required `Department` authentication claim in `ContosoDashboard/Pages/Login.cshtml.cs`
+- [X] T005 [P] Create `Document` with integer `DocumentId`, required title/category/original filename/storage path/file size/file type/uploader/upload date and optional project/description fields in `ContosoDashboard/Models/Document.cs`
+- [X] T006 [P] Create `DocumentTag` with required trimmed tag value and document relationship in `ContosoDashboard/Models/DocumentTag.cs`
+- [X] T007 [P] Create `DocumentShare` with exactly one user-or-department target and sharing metadata in `ContosoDashboard/Models/DocumentShare.cs`
+- [X] T008 [P] Create `DocumentTask` with unique document/task relationship in `ContosoDashboard/Models/DocumentTask.cs`
+- [X] T009 [P] Create immutable `DocumentActivity` audit model with nullable logical document reference and title snapshot in `ContosoDashboard/Models/DocumentActivity.cs`
+- [X] T010 Configure document DbSets, relationships, delete behaviors, `StoragePath` uniqueness, MIME length 255, and document indexes in `ContosoDashboard/Data/ApplicationDbContext.cs`
+- [X] T011 [P] Write failing safe-path, upload/delete, and partial-cleanup tests for local storage in `ContosoDashboard.Tests/Services/LocalFileStorageServiceTests.cs`
+- [X] T012 [P] Write failing safe/unsafe scan-result tests in `ContosoDashboard.Tests/Services/TrainingFileScanServiceTests.cs`
+- [X] T013 [P] Define `IFileStorageService` and storage-path contract in `ContosoDashboard/Services/IFileStorageService.cs`
+- [X] T014 [P] Define `IFileScanService` and `FileScanResult` contract in `ContosoDashboard/Services/IFileScanService.cs`
+- [X] T015 Implement deterministic training-grade scanning behavior in `ContosoDashboard/Services/TrainingFileScanService.cs` until T012 passes
+- [X] T016 Implement generated `{userId}/{projectId-or-personal}/{guid}.{ext}` paths, safe writes/download/delete, and cleanup in `ContosoDashboard/Services/LocalFileStorageService.cs` until T011 passes
+- [X] T017 Define authorization-aware document operations in `ContosoDashboard/Services/IDocumentService.cs`
+- [X] T018 Add the required `Department` authentication claim in `ContosoDashboard/Pages/Login.cshtml.cs`
 
 **Checkpoint**: Shared schema and infrastructure compile; storage/scanner tests pass; user stories may begin.
 
@@ -51,19 +51,19 @@
 **Independent Test**: Log in as Ni Kang, upload a supported PDF under 25 MB with title/category, verify progress/success/list metadata, then download the same content while confirming it is stored outside `wwwroot`.
 
 ### Tests for User Story 1 — write first and confirm RED
-- [ ] T019 [P] [US1] Write failing tests for required title/category, supported PDF/Office/text/JPEG/PNG types, and the 25 MB maximum in `ContosoDashboard.Tests/Services/DocumentServiceUploadTests.cs`
-- [ ] T020 [P] [US1] Write failing tests proving scan/storage/database failures leave no completed document row or partial file in `ContosoDashboard.Tests/Services/DocumentUploadCleanupTests.cs`
-- [ ] T021 [P] [US1] Write failing owner/project-member visibility and unauthorized-access tests in `ContosoDashboard.Tests/Authorization/DocumentAuthorizationTests.cs`
-- [ ] T022 [P] [US1] Write failing download contract tests for 200/403/404 behavior and original filename preservation in `ContosoDashboard.Tests/Integration/DocumentsControllerTests.cs`
+- [X] T019 [P] [US1] Write failing tests for required title/category, supported PDF/Office/text/JPEG/PNG types, and the 25 MB maximum in `ContosoDashboard.Tests/Services/DocumentServiceUploadTests.cs`
+- [X] T020 [P] [US1] Write failing tests proving scan/storage/database failures leave no completed document row or partial file in `ContosoDashboard.Tests/Services/DocumentUploadCleanupTests.cs`
+- [X] T021 [P] [US1] Write failing owner/project-member visibility and unauthorized-access tests in `ContosoDashboard.Tests/Authorization/DocumentAuthorizationTests.cs`
+- [X] T022 [P] [US1] Write failing download contract tests for 200/403/404 behavior and original filename preservation in `ContosoDashboard.Tests/Integration/DocumentsControllerTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T023 [US1] Implement upload validation, scan→store→metadata ordering, tags, upload audit, cleanup, and My Documents/project visibility queries in `ContosoDashboard/Services/DocumentService.cs` until T019–T021 pass
-- [ ] T024 [US1] Implement authorization-gated download endpoint and original filename/MIME response in `ContosoDashboard/Controllers/DocumentsController.cs` until T022 passes
-- [ ] T025 [US1] Implement My Documents table, upload modal, required metadata validation, `InputFile` reset, MemoryStream copy, progress state, and success/error feedback in `ContosoDashboard/Pages/Documents.razor`
-- [ ] T026 [P] [US1] Add the Documents navigation entry in `ContosoDashboard/Shared/NavMenu.razor`
-- [ ] T027 [US1] Register document/storage/scanner services, controller support, and endpoint mapping in `ContosoDashboard/Program.cs`
-- [ ] T028 [US1] Execute the User Story 1 build/tests and Ni Kang browser journey, then record observed MVP and timing evidence in `specs/001-document-upload-management/quickstart.md`
+- [X] T023 [US1] Implement upload validation, scan→store→metadata ordering, tags, upload audit, cleanup, and My Documents/project visibility queries in `ContosoDashboard/Services/DocumentService.cs` until T019–T021 pass
+- [X] T024 [US1] Implement authorization-gated download endpoint and original filename/MIME response in `ContosoDashboard/Controllers/DocumentsController.cs` until T022 passes
+- [X] T025 [US1] Implement My Documents table, upload modal, required metadata validation, `InputFile` reset, MemoryStream copy, progress state, and success/error feedback in `ContosoDashboard/Pages/Documents.razor`
+- [X] T026 [P] [US1] Add the Documents navigation entry in `ContosoDashboard/Shared/NavMenu.razor`
+- [X] T027 [US1] Register document/storage/scanner services, controller support, and endpoint mapping in `ContosoDashboard/Program.cs`
+- [X] T028 [US1] Execute the User Story 1 build/tests and Ni Kang browser journey, then record observed MVP and timing evidence in `specs/001-document-upload-management/quickstart.md`
 
 **Checkpoint / MVP STOP**: Tasks T001–T028 deliver and validate User Story 1 independently. Do not begin US2 until the MVP is green.
 

@@ -43,6 +43,10 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IFileScanService, TrainingFileScanService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddControllers();
 
 // Add HttpContextAccessor for accessing user claims
 builder.Services.AddHttpContextAccessor();
@@ -84,16 +88,16 @@ app.Use(async (context, next) =>
     context.Response.Headers["X-Frame-Options"] = "DENY";
     context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
     context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    
+
     // Content Security Policy for Blazor Server
-    context.Response.Headers["Content-Security-Policy"] = 
+    context.Response.Headers["Content-Security-Policy"] =
         "default-src 'self'; " +
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
         "font-src 'self' https://cdn.jsdelivr.net; " +
         "img-src 'self' data: https:; " +
         "connect-src 'self' wss: ws:;";
-    
+
     await next();
 });
 
@@ -106,6 +110,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapBlazorHub();
+app.MapControllers();
 app.MapFallbackToPage("/_Host");
 
 app.Run();

@@ -5,6 +5,7 @@
 @using System.Security.Claims
 @attribute [Authorize]
 @inject IProjectService ProjectService
+@inject IDocumentService DocumentService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -52,11 +53,9 @@
                             <div class="col-md-3">
                                 <label class="text-muted small">Progress</label>
                                 <div class="progress">
-                                    <div class="progress-bar" role="progressbar" 
+                                    <div class="progress-bar" role="progressbar"
                                          style="width: @project.CompletionPercentage%"
-                                         aria-valuenow="@project.CompletionPercentage" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="100">
+                                         aria-valuenow="@project.CompletionPercentage" aria-valuemin="0" aria-valuemax="100">
                                         @project.CompletionPercentage%
                                     </div>
                                 </div>
@@ -114,7 +113,9 @@
                                     <tbody>
                                         @foreach (var task in project.Tasks.OrderBy(t => t.DueDate))
                                         {
-                                            <tr class="@(task.DueDate.HasValue && task.DueDate < DateTime.Today && task.Status != Models.TaskStatus.Completed ? "table-danger" : "")">">
+                                            <tr
+                                                class="@(task.DueDate.HasValue && task.DueDate < DateTime.Today && task.Status != Models.TaskStatus.Completed ? "table-danger" : "")">
+                                                ">
                                                 <td>
                                                     <strong>@task.Title</strong>
                                                     @if (!string.IsNullOrEmpty(task.Description))
@@ -136,12 +137,55 @@
                                                 </td>
                                                 <td>
                                                     @(task.DueDate?.ToString("MMM dd, yyyy") ?? "No due date")
-                                                    @if (task.DueDate.HasValue && task.DueDate < DateTime.Today && task.Status != Models.TaskStatus.Completed)
+                                                    @if (task.DueDate.HasValue && task.DueDate < DateTime.Today && task.Status !=
+                                        Models.TaskStatus.Completed)
                                                     {
                                                         <span class="text-danger ms-1">
                                                             <i class="bi bi-exclamation-triangle"></i> Overdue
                                                         </span>
                                                     }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Project Documents</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!projectDocuments.Any())
+                        {
+                            <p class="text-muted">No documents uploaded for this project.</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>Uploaded</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var document in projectDocuments)
+                                        {
+                                            <tr>
+                                                <td>@document.Title</td>
+                                                <td>@document.Category</td>
+                                                <td>@document.UploadDate.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                                                <td>
+                                                    <a class="btn btn-sm btn-outline-primary"
+                                                       href="/api/documents/@document.DocumentId/download" target="_blank"
+                                                       rel="noreferrer">Download</a>
                                                 </td>
                                             </tr>
                                         }
@@ -172,10 +216,8 @@
                                         <div class="d-flex align-items-center">
                                             @if (!string.IsNullOrEmpty(member.User.ProfilePhotoUrl))
                                             {
-                                                <img src="@member.User.ProfilePhotoUrl" 
-                                                     alt="@member.User.DisplayName" 
-                                                     class="rounded-circle me-2" 
-                                                     style="width: 40px; height: 40px; object-fit: cover;" />
+                                                <img src="@member.User.ProfilePhotoUrl" alt="@member.User.DisplayName"
+                                                     class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;" />
                                             }
                                             else
                                             {
@@ -217,8 +259,10 @@
                         </div>
                         <div class="mb-3">
                             <label class="text-muted small">Overdue Tasks</label>
-                            <h4 class="@(project.Tasks.Count(t => t.DueDate.HasValue && t.DueDate < DateTime.Today && t.Status != Models.TaskStatus.Completed) > 0 ? "text-danger" : "")">
-                                @project.Tasks.Count(t => t.DueDate.HasValue && t.DueDate < DateTime.Today && t.Status != Models.TaskStatus.Completed)
+                            <h4
+                                class="@(project.Tasks.Count(t => t.DueDate.HasValue && t.DueDate < DateTime.Today && t.Status != Models.TaskStatus.Completed) > 0 ? "text-danger" : "")">
+                                @project.Tasks.Count(t => t.DueDate.HasValue && t.DueDate < DateTime.Today && t.Status !=
+                            Models.TaskStatus.Completed)
                             </h4>
                         </div>
                         <div>
@@ -237,6 +281,7 @@
     public int ProjectId { get; set; }
 
     private Project? project;
+    private List<Document> projectDocuments = new();
     private int currentUserId = 0;
 
     protected override async Task OnInitializedAsync()
@@ -253,8 +298,14 @@
         if (currentUserId > 0)
         {
             project = await ProjectService.GetProjectByIdAsync(ProjectId, currentUserId);
+            if (project != null)
+            {
+                projectDocuments = (await DocumentService.GetAccessibleDocumentsAsync(currentUserId, CancellationToken.None))
+                    .Where(document => document.ProjectId == ProjectId)
+                    .ToList();
+            }
         }
-        
+
         if (project == null)
         {
             NavigationManager.NavigateTo("/projects");
@@ -306,3 +357,4 @@
         return displayName.Length > 0 ? displayName[0].ToString().ToUpper() : "?";
     }
 }
+

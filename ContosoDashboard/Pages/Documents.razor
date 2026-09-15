@@ -1,0 +1,311 @@
+@page "/documents"
+@using System.Security.Claims
+@using ContosoDashboard.Models
+@using ContosoDashboard.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@attribute [Authorize]
+@inject IDocumentService DocumentService
+@inject IProjectService ProjectService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>My Documents</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1>My Documents</h1>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                Upload document
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">@errorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="alert alert-success" role="alert">@successMessage</div>
+    }
+
+    @if (documents is not null)
+    {
+        if (!documents.Any())
+        {
+            <div class="alert alert-info">No documents uploaded yet.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                            <th>Project</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var document in documents)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@document.Title</strong>
+                                    @if (!string.IsNullOrWhiteSpace(document.Description))
+                                    {
+                                        <div class="small text-muted">@document.Description</div>
+                                    }
+                                </td>
+                                <td>@document.Category</td>
+                                <td>@document.FileType</td>
+                                <td>@FormatBytes(document.FileSize)</td>
+                                <td>@document.UploadDate.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                                <td>@(document.ProjectId.HasValue ? $"Project #{document.ProjectId.Value}" : "Personal")</td>
+                                <td>
+                                    <a class="btn btn-sm btn-outline-primary" href="/api/documents/@document.DocumentId/download" target="_blank" rel="noreferrer">
+                                        Download
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>
+
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadDocumentModalLabel">Upload document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Document</label>
+                    <InputFile OnChange="HandleFileSelection" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" />
+                    @if (!string.IsNullOrWhiteSpace(selectedFileName))
+                    {
+                        <div class="form-text">Selected: @selectedFileName</div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    <input class="form-control" @bind="title" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" @bind="category">
+                        <option value="Personal Files">Personal Files</option>
+                        <option value="Project Documents">Project Documents</option>
+                        <option value="Team Resources">Team Resources</option>
+                        <option value="Reports">Reports</option>
+                        <option value="Presentations">Presentations</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Project</label>
+                    <select class="form-select" @bind="selectedProjectId">
+                        <option value="">Personal workspace</option>
+                        @foreach (var project in projects)
+                        {
+                            <option value="@project.ProjectId">@project.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" rows="3" @bind="description"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Tags</label>
+                    <input class="form-control" @bind="tagText" placeholder="finance, quarterly" />
+                </div>
+
+                @if (isUploading)
+                {
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                            Uploading...
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" @onclick="UploadAsync" disabled="@(selectedFile is null || isUploading)">
+                    @(isUploading ? "Uploading..." : "Save document")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Document>? documents;
+    private string? errorMessage;
+    private string? successMessage;
+    private string title = string.Empty;
+    private string category = "Personal Files";
+    private string description = string.Empty;
+    private string tagText = string.Empty;
+    private string selectedFileName = string.Empty;
+    private IBrowserFile? selectedFile;
+    private bool isUploading;
+    private int currentUserId;
+    private int? selectedProjectId;
+    private List<Project> projects = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim != null && int.TryParse(claim.Value, out var userId))
+        {
+            currentUserId = userId;
+        }
+
+        if (currentUserId > 0)
+        {
+            projects = await ProjectService.GetUserProjectsAsync(currentUserId);
+        }
+
+        await LoadDocumentsAsync();
+    }
+
+    private async Task LoadDocumentsAsync()
+    {
+        if (currentUserId <= 0)
+        {
+            return;
+        }
+
+        documents = (await DocumentService.GetAccessibleDocumentsAsync(currentUserId, CancellationToken.None)).ToList();
+    }
+
+    private Task HandleFileSelection(InputFileChangeEventArgs args)
+    {
+        selectedFile = args.File;
+        selectedFileName = selectedFile.Name;
+        errorMessage = null;
+        successMessage = null;
+        if (string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(selectedFileName))
+        {
+            title = Path.GetFileNameWithoutExtension(selectedFileName);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task UploadAsync()
+    {
+        if (selectedFile is null)
+        {
+            errorMessage = "Please choose a file first.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            errorMessage = "Document title is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            errorMessage = "Document category is required.";
+            return;
+        }
+
+        var extension = Path.GetExtension(selectedFileName);
+        var allowed = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".jpg", ".jpeg", ".png" };
+        if (!allowed.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        {
+            errorMessage = "Unsupported file type.";
+            return;
+        }
+
+        if (selectedFile.Size > 25 * 1024 * 1024)
+        {
+            errorMessage = "File size must be 25 MB or less.";
+            return;
+        }
+
+        try
+        {
+            isUploading = true;
+            successMessage = null;
+            errorMessage = null;
+
+            await using var stream = new MemoryStream();
+            await selectedFile.OpenReadStream(25 * 1024 * 1024).CopyToAsync(stream);
+            stream.Position = 0;
+
+            var tags = tagText
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .ToArray();
+
+            var request = new DocumentUploadRequest(
+                title,
+                description,
+                category,
+                selectedProjectId,
+                tags,
+                selectedFileName,
+                selectedFile.ContentType,
+                selectedFile.Size);
+
+            await DocumentService.UploadAsync(request, stream, currentUserId, CancellationToken.None);
+
+            title = string.Empty;
+            description = string.Empty;
+            category = "Personal Files";
+            selectedProjectId = null;
+            tagText = string.Empty;
+            selectedFile = null;
+            selectedFileName = string.Empty;
+            successMessage = "Document uploaded successfully.";
+            await LoadDocumentsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+
+    private static string FormatBytes(long length)
+    {
+        string[] suffixes = ["B", "KB", "MB", "GB"];
+        var value = (double)length;
+        var index = 0;
+        while (value >= 1024 && index < suffixes.Length - 1)
+        {
+            value /= 1024;
+            index++;
+        }
+
+        return $"{value:0.##} {suffixes[index]}";
+    }
+}
